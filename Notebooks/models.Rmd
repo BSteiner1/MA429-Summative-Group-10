@@ -1,0 +1,88 @@
+---
+title: "Group 10 Models"
+output: html_document
+date: "2024-04-XX"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(jpeg)
+```
+
+```{r}
+path <- "../Data/Images"
+folders <- list.files(path)
+```
+
+```{r}
+vec_data <- vec_data <- list()
+```
+
+`
+```{r}
+for(folder in folders){
+  
+  # Determine the label using the folder name
+  if(grepl("healthy", folder) == T) {
+    label <- 1
+  }
+  else {
+    label <- 0
+  }
+  
+  # Path to folder
+  folder_path <- paste(path, '/', sep = '')
+  folder_path <- paste(folder_path, folder, sep='')
+  
+  # Image names within the folder
+  to_images <- paste(folder_path, '/', sep='')
+  to_images <- paste(to_images, sep='')
+  image_names <- list.files(path = to_images)
+  
+  # Add images to a list
+  for(image_name in image_names[0:10]){       ## NOTE SHORTENED TO 10 FOR EASE RIGHT NOW
+    image_path <- paste(to_images, image_name, sep='')
+    
+    # Read the JPEG image
+    img <- readJPEG(image_path)
+    
+    # Extract channels
+    red_channel <- as.vector(img[,,1])
+    green_channel <- as.vector(img[,,2])  
+    blue_channel <- as.vector(img[,,3])  
+    
+    vec <- c(red_channel, green_channel, blue_channel)
+    
+    # Add the tuple to the list
+    tuple <- list(image = vec, label = label)
+    vec_data <- c(vec_data, list(tuple))
+
+  }
+  
+}
+```
+
+```{r}
+length(vec_data)
+```
+
+```{r}
+vec_data[[1]]$label
+```
+
+```{r}
+# Save the list of feature vectors to a file
+
+# NOTE THIS ISNT WOKRING YET HMMMM
+save(vec_data, file = "../Data/data.RData")
+load("../Data/data.RData")
+```
+
+
+
+
+
+

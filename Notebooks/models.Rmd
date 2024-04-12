@@ -18,7 +18,7 @@ folders <- list.files(path)
 ```
 
 ```{r}
-vec_data <- vec_data <- list()
+vec_data <- list() # (note: changes being made here)
 ```
 
 `
@@ -75,8 +75,6 @@ vec_data[[1]]$label
 
 ```{r}
 # Save the list of feature vectors to a file
-
-# NOTE THIS ISNT WOKRING YET HMMMM
 save(vec_data, file = "../Data/data.RData")
 load("../Data/data.RData")
 ```

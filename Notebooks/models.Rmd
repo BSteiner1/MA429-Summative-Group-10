@@ -77,9 +77,109 @@ vec_data[[1]]$label
 # Save the list of feature vectors to a file
 save(vec_data, file = "../Data/data.RData")
 load("../Data/data.RData")
+
+ls()
 ```
 
+*Data exploration*
 
+Exploring the number of images available for each type of plant
+```{r}
+library(ggplot2)
+
+# Define the types of fruits to search in the folder
+target_words <- c("Apple", "Cherry", "Corn", "Grape", "Peach", "Pepper", "Potato", "Strawberry")
+
+# Function to get subfolders containing a specific keyword in their names
+get_subfolders <- function(directory, keyword) {
+  
+  # Get names of all subfolders
+  subfolders <- list.dirs(directory, full.names = TRUE, recursive = FALSE)
+  # Filter out subfolders whose name contains the keyword
+  keyword_subfolders <- subfolders[grep(keyword, subfolders)]
+  
+  return(keyword_subfolders)
+}
+
+# Function to count images in a folder
+count_images_in_folder <- function(directory) {
+  
+  # List all files in the directory
+  files <- list.files(directory, full.names = TRUE)
+  # Count the number of image files
+  num_image_files <- sum(grepl("\\.(jpg|jpeg|png|gif)$", files, ignore.case = TRUE))
+  
+  return(num_image_files)
+}
+
+# Initialize a list to store the number of images for each keyword
+images <- c()
+
+# Iterate over each subfolder containing the keyword
+for (i in 1:length(target_words)) {
+  
+  # Initialize variable to store total number of images
+  total_images <- 0
+  # Get the subfolders containing the keyword in their names
+  keyword_subfolders <- get_subfolders(path, target_words[i])
+  
+  for (folder in keyword_subfolders) {
+    # Count the number of images in the folder
+    num_images <- count_images_in_folder(folder)
+    # Add to the total count
+    total_images <- total_images + num_images
+  }
+
+  images <- c(images, total_images)
+}
+
+# Create a bar chart
+ggplot(data.frame(x = target_words, y = images), aes(x = x, y = y)) +  # Specify aesthetics
+  geom_bar(stat = "identity", fill = rgb(0/255, 128/255, 0/255)) +
+  labs(title = "Training Data for Plant Diseases", x = "Types of fruit leaves", y = "Number of training images") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Exploring the number of healthy and unhealthy leaf images available for each type of plant
+```{r}
+# Function to get subfolders containing both keywords in their names
+get_subfolders_two <- function(directory, keyword1, keyword2) {
+  # Get names of all subfolders
+  subfolders <- list.dirs(directory, full.names = TRUE, recursive = FALSE)
+  # Filter out subfolders whose name contains both keywords
+  keyword_subfolders <- subfolders[grepl(keyword1, subfolders) & grepl(keyword2, subfolders)]
+  return(keyword_subfolders)
+}
+
+# Initialize a list to store the number of images for each keyword
+images_healthy <- c()
+
+# Iterate over each subfolder containing both keywords
+for (i in 1:length(target_words)) {
+  
+  # Initialize variable to store total number of images
+  total_images <- 0
+  # Get the subfolders containing the keyword in their names
+  keyword_subfolders <- get_subfolders_two(path, target_words[i], "healthy")
+  
+  for (folder in keyword_subfolders) {
+    # Count the number of images in the folder
+    num_images <- count_images_in_folder(folder)
+    # Add to the total count
+    total_images <- total_images + num_images
+  }
+  
+  images_healthy <- c(images_healthy, total_images)
+}
+
+# Create stacked bar chart
+ggplot(data.frame(x = target_words, y1 = images, y2 = images_healthy), aes(x = x)) +
+  geom_bar(aes(y = y1, fill = "unhealthy"), stat = "identity") +
+  geom_bar(aes(y = y2, fill = "healthy"), stat = "identity") +
+  labs(title = "Stacked Bar Chart for Plant diseases", x = "Types of fruit leaves", y = "Number of training images") +
+  scale_fill_manual(values = c("unhealthy" = rgb(255/255, 99/255, 71/255), "healthy" = rgb(60/255, 179/255, 113/255))) + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
 
 
 

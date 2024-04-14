@@ -8,8 +8,15 @@ date: "2024-04-XX"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 ```{r}
 library(jpeg)
+#library(tensorflow)
+library(keras)
+library(caret)
+library(ggplot2)
+library(dplyr)
+library(reticulate)
 ```
 
 ```{r}
@@ -18,7 +25,7 @@ folders <- list.files(path)
 ```
 
 ```{r}
-vec_data <- list() # (note: changes being made here)
+vec_data <- list() 
 ```
 
 `
@@ -49,6 +56,8 @@ for(folder in folders){
     # Read the JPEG image
     img <- readJPEG(image_path)
     
+    img_array <- array(img, dim = c(256, 256, 3))
+    
     # Extract channels
     red_channel <- as.vector(img[,,1])
     green_channel <- as.vector(img[,,2])  
@@ -57,7 +66,7 @@ for(folder in folders){
     vec <- c(red_channel, green_channel, blue_channel)
     
     # Add the tuple to the list
-    tuple <- list(image = vec, label = label)
+    tuple <- list(image = img_array, label = label)
     vec_data <- c(vec_data, list(tuple))
 
   }
@@ -70,23 +79,21 @@ length(vec_data)
 ```
 
 ```{r}
-vec_data[[1]]$label
+dim(vec_data[[1]]$image)
 ```
 
 ```{r}
 # Save the list of feature vectors to a file
-save(vec_data, file = "../Data/data.RData")
-load("../Data/data.RData")
+#save(vec_data, file = "../Data/data.RData")
+#load("../Data/data.RData")
 
-ls()
+#ls()
 ```
 
 *Data exploration*
 
 Exploring the number of images available for each type of plant
 ```{r}
-library(ggplot2)
-
 # Define the types of fruits to search in the folder
 target_words <- c("Apple", "Cherry", "Corn", "Grape", "Peach", "Pepper", "Potato", "Strawberry")
 
@@ -180,7 +187,47 @@ ggplot(data.frame(x = target_words, y1 = images, y2 = images_healthy), aes(x = x
   scale_fill_manual(values = c("unhealthy" = rgb(255/255, 99/255, 71/255), "healthy" = rgb(60/255, 179/255, 113/255))) + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
+## Train/Validation/Test split
+
+```{r}
+# Overall, we create a TRAIN:VAL:TEST split of 60:20:20
+# First create a train/other split
+train_index <- createDataPartition(seq_along(vec_data), p = 0.6, list = FALSE)
+train_data <- vec_data[train_index]
+other_data <- vec_data[-train_index]
+
+# Use "other" to create a validation/test split
+val_index <- createDataPartition(seq_along(vec_data), p = 0.5, list = FALSE)
+val_data <- vec_data[val_index]
+test_data <- vec_data[-val_index]
+```
+
+```{r}
+length(train_data)
+length(val_data)
+length(test_data)
+```
+
+## CNN
 
 
+```{r}
+# Define the CNN model
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = 'relu', input_shape = c(28, 28, 1)) %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = 'relu') %>%
+  layer_flatten() %>%
+  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+```{r}
+model %>% compile(
+  optimizer = 'adam',
+  loss = 'sparse_categorical_crossentropy',
+  metrics = c('accuracy')
+)
+```
 
 

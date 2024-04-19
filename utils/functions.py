@@ -4,9 +4,8 @@ import numpy as np
 import random
 
 #--------------------------------------------------------------------
-def get_data():
+def get_data(path):
     
-    path = '../Data/Images'
     folders = os.listdir(path)
     
     data = []
